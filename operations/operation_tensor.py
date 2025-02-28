@@ -121,3 +121,60 @@ def pass_kernel_function(tensor, criterion, allow_nan=False):
         return tensor * tensor
     else:
         raise NotImplementedError
+
+
+def concat_tensor_list(tensor_list, dim=0, strict=False):
+    """
+    Recursively concatenate a list of nested tensors along the specified dimension
+    at the outermost level while preserving the structure.
+
+    Args:
+        tensor_list (list): A list where each element has the same nested structure (dict/list/tensor).
+        dim (int): The dimension along which to concatenate tensors.
+        strict (bool): If True, raises an error for unsupported input types.
+
+    Returns:
+        The concatenated structure with tensors merged at the outermost level.
+        If non-tensor elements exist, they are grouped into lists instead of being concatenated.
+
+    Example:
+        >>> data = [
+        ...     {
+        ...      "a": torch.randn(2, 3),
+        ...      "b": [{"x": torch.randn(2, 3), "y": "text1"},
+        ...            {"x": torch.randn(2, 3), "y": 123}]
+        ...     },
+        ...     {
+        ...      "a": torch.randn(2, 3),
+        ...      "b": [{"x": torch.randn(2, 3), "y": "text2"},
+        ...            {"x": torch.randn(2, 3), "y": 456}]
+        ...     }
+        ... ]
+        >>> result = concat_tensor_list(data, dim=0)
+        >>> print(result)
+        {
+            "a": tensor of shape (4, 3),
+            "b": [
+                {"x": tensor of shape (4, 3), "y": ["text1", "text2"]},
+                {"x": tensor of shape (4, 3), "y": [123, 456]}
+            ]
+        }
+    """
+    if not tensor_list:
+        raise ValueError("tensor_list cannot be empty")
+
+    first_elem = tensor_list[0]
+
+    if isinstance(first_elem, torch.Tensor):
+        return torch.cat(tensor_list, dim=dim)
+
+    elif isinstance(first_elem, dict):
+        return {key: concat_tensor_list([item[key] for item in tensor_list], dim, strict) for key in first_elem}
+
+    elif isinstance(first_elem, list):
+        return [concat_tensor_list([item[i] for item in tensor_list], dim, strict) for i in range(len(first_elem))]
+
+    else:
+        if strict:
+            raise TypeError(f"Unsupported input type in tensor_list: {type(first_elem)}")
+        return tensor_list  # combine into a list
