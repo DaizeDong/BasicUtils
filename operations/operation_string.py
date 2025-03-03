@@ -1,7 +1,7 @@
-import types
-
 import re
+import types
 from argparse import ArgumentTypeError
+from typing import List
 
 
 def str2none(v, extended=True):
@@ -25,7 +25,7 @@ def str2bool(v, extended=True):
 
 
 def string2number_list(string, sep=","):
-    if isinstance(string, list) or string is None:
+    if isinstance(string, List) or string is None:
         return string
     else:
         split_string = string.split(sep)

@@ -1,4 +1,5 @@
 from collections import deque
+from typing import List
 
 import numpy as np
 
@@ -50,7 +51,7 @@ class FindCycles:
         self.visited = [False] * self.num_vertices
         self.cycles = set()  # Set to store unique cycles
 
-    def find_cycles(self) -> list:
+    def find_cycles(self) -> List:
         # Remove nodes with degree 1
         self.remove_degree_one_nodes()
 

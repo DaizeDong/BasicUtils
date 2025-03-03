@@ -116,7 +116,7 @@ def save_json(data, file_path, indent=4, **kwargs):
         f.write(f"{json.dumps(data, ensure_ascii=False, indent=indent, **kwargs)}\n")
 
 
-def load_jsonl(file_path) -> list:
+def load_jsonl(file_path) -> List:
     data = []
     with open(file_path, "r", encoding="utf8") as f:
         for line in f:

@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import List, Union
 
 import numpy as np
 
@@ -172,7 +172,7 @@ def replicate_elements(input_list, num_copies: Union[int, float, List[int]]):
                 # Add to the "num_copies_list"
                 num_copies_list = (np.array(num_copies_list) + extra_num_copies_array).tolist()
 
-    elif isinstance(num_copies, list):
+    elif isinstance(num_copies, List):
         # Variable replication based on the list
         if len(input_list) != len(num_copies):
             raise ValueError("Lengths of input_list and num_copies_list must be the same.")

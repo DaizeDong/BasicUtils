@@ -8,11 +8,11 @@ def move_tensors_to_device(input, device, strict=False):
     if isinstance(input, torch.Tensor):
         input.to(device)
 
-    elif isinstance(input, dict):
+    elif isinstance(input, Dict):
         for key, value in input.items():
             input[key] = move_tensors_to_device(value, device, strict)
 
-    elif isinstance(input, list):
+    elif isinstance(input, List):
         for i, value in enumerate(input):
             input[i] = move_tensors_to_device(value, device, strict)
 
@@ -31,12 +31,12 @@ def tensors_are_same(input1, input2, strict=False):
     elif isinstance(input1, torch.Tensor):
         return torch.equal(input1, input2)
 
-    elif isinstance(input1, dict):
+    elif isinstance(input1, Dict):
         if set(input1.keys()) != set(input2.keys()):
             return False
         return all(tensors_are_same(input1[key], input2[key]) for key in input1)
 
-    elif isinstance(input1, list):
+    elif isinstance(input1, List):
         if len(input1) != len(input2):
             return False
         return all(tensors_are_same(item1, item2) for item1, item2 in zip(input1, input2))
@@ -51,13 +51,13 @@ def tensor2numbers(input):
     if input is None:
         return input
 
-    elif isinstance(input, dict):
+    elif isinstance(input, Dict):
         for key, value in input.items():
             if isinstance(value, torch.Tensor):
                 input[key] = value.tolist()
         return input
 
-    elif isinstance(input, list):
+    elif isinstance(input, List):
         for i in range(len(input)):
             if isinstance(input[i], torch.Tensor):
                 input[i] = input[i].tolist()
@@ -131,7 +131,7 @@ def concat_tensors(input: Union[List, Tuple], dim=0, strict=False):
     at the outermost level while preserving the structure.
 
     Args:
-        input (Union[List,Tuple]): A list/tuple where each element has the same nested structure (dict/list/tensor).
+        input (list/tuple): A list/tuple where each element has the same nested structure (dict/list/tensor).
         dim (int): The dimension along which to concatenate tensors.
         strict (bool): If True, raises an error for unsupported input types. Otherwise, combines them into a list.
 
