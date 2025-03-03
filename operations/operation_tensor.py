@@ -1,3 +1,5 @@
+from typing import Dict, List, Sized, Tuple, Union
+
 import torch
 
 
@@ -123,15 +125,15 @@ def pass_kernel_function(tensor, criterion, allow_nan=False):
         raise NotImplementedError
 
 
-def concat_tensor_list(tensor_list, dim=0, strict=False):
+def concat_tensors(input: Union[List, Tuple], dim=0, strict=False):
     """
     Recursively concatenate a list of nested tensors along the specified dimension
     at the outermost level while preserving the structure.
 
     Args:
-        tensor_list (list): A list where each element has the same nested structure (dict/list/tensor).
+        input (Union[List,Tuple]): A list/tuple where each element has the same nested structure (dict/list/tensor).
         dim (int): The dimension along which to concatenate tensors.
-        strict (bool): If True, raises an error for unsupported input types.
+        strict (bool): If True, raises an error for unsupported input types. Otherwise, combines them into a list.
 
     Returns:
         The concatenated structure with tensors merged at the outermost level.
@@ -150,7 +152,7 @@ def concat_tensor_list(tensor_list, dim=0, strict=False):
         ...            {"x": torch.randn(2, 3), "y": 456}]
         ...     }
         ... ]
-        >>> result = concat_tensor_list(data, dim=0)
+        >>> result = concat_tensors(data, dim=0)
         >>> print(result)
         {
             "a": tensor of shape (4, 3),
@@ -160,21 +162,27 @@ def concat_tensor_list(tensor_list, dim=0, strict=False):
             ]
         }
     """
-    if not tensor_list:
-        raise ValueError("tensor_list cannot be empty")
+    if len(input) == 0:
+        return input
 
-    first_elem = tensor_list[0]
+    first_elem = input[0]
 
     if isinstance(first_elem, torch.Tensor):
-        return torch.cat(tensor_list, dim=dim)
+        return torch.cat(input, dim=dim)
 
-    elif isinstance(first_elem, dict):
-        return {key: concat_tensor_list([item[key] for item in tensor_list], dim, strict) for key in first_elem}
+    elif isinstance(first_elem, Dict):
+        return {
+            key: concat_tensors([item[key] for item in input], dim, strict)
+            for key in first_elem
+        }
 
-    elif isinstance(first_elem, list):
-        return [concat_tensor_list([item[i] for item in tensor_list], dim, strict) for i in range(len(first_elem))]
+    elif isinstance(first_elem, Sized):
+        return [
+            concat_tensors([item[i] for item in input], dim, strict)
+            for i in range(len(first_elem))
+        ]
 
     else:
         if strict:
-            raise TypeError(f"Unsupported input type in tensor_list: {type(first_elem)}")
-        return tensor_list  # combine into a list
+            raise TypeError(f"Unsupported element type: {type(first_elem)}")
+        return [item for item in input]
