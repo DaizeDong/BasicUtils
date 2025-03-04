@@ -125,7 +125,7 @@ def pass_kernel_function(tensor, criterion, allow_nan=False):
         raise NotImplementedError
 
 
-def concat_tensors(input: Union[List, Tuple], dim=0, strict=False):
+def concat_tensors(input: Union[List, Tuple], dim=0, auto_reshape=False, strict=False):
     """
     Recursively concatenate a list of nested tensors along the specified dimension
     at the outermost level while preserving the structure.
@@ -133,6 +133,7 @@ def concat_tensors(input: Union[List, Tuple], dim=0, strict=False):
     Args:
         input (list/tuple): A list/tuple where each element has the same nested structure (dict/list/tensor).
         dim (int): The dimension along which to concatenate tensors.
+        auto_reshape (bool): If True, automatically reshapes tensors to have the same dimension.
         strict (bool): If True, raises an error for unsupported input types. Otherwise, combines them into a list.
 
     Returns:
@@ -168,7 +169,11 @@ def concat_tensors(input: Union[List, Tuple], dim=0, strict=False):
     first_elem = input[0]
 
     if isinstance(first_elem, torch.Tensor):
-        return torch.cat(input, dim=dim)
+        if auto_reshape and first_elem.ndim < dim + 1:  # the dimension is not enough, add with 1
+            cat_shape = first_elem.shape + (1,) * (dim + 1 - first_elem.ndim)
+            return torch.cat([t.reshape(cat_shape) for t in input], dim=dim)
+        else:
+            return torch.cat(input, dim=dim)
 
     elif isinstance(first_elem, Dict):
         return {
