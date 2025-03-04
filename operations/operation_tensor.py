@@ -149,8 +149,8 @@ def concat_tensors(input: Union[List, Tuple], dim=0, auto_reshape=False, strict=
         ...     },
         ...     {
         ...      "a": torch.randn(2, 3),
-        ...      "b": [{"x": torch.randn(2, 3), "y": "text2"},
-        ...            {"x": torch.randn(2, 3), "y": 456}]
+        ...      "b": [{"x": torch.randn(5, 3), "y": "text2"},
+        ...            {"x": torch.randn(5, 3), "y": 456}]
         ...     }
         ... ]
         >>> result = concat_tensors(data, dim=0)
@@ -158,8 +158,8 @@ def concat_tensors(input: Union[List, Tuple], dim=0, auto_reshape=False, strict=
         {
             "a": tensor of shape (4, 3),
             "b": [
-                {"x": tensor of shape (4, 3), "y": ["text1", "text2"]},
-                {"x": tensor of shape (4, 3), "y": [123, 456]}
+                {"x": tensor of shape (7, 3), "y": ["text1", "text2"]},
+                {"x": tensor of shape (7, 3), "y": [123, 456]}
             ]
         }
     """
