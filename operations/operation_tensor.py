@@ -177,13 +177,13 @@ def concat_tensors(input: Union[List, Tuple], dim=0, auto_reshape=False, strict=
 
     elif isinstance(first_elem, Dict):
         return {
-            key: concat_tensors([item[key] for item in input], dim, strict)
+            key: concat_tensors([item[key] for item in input], dim=dim, auto_reshape=auto_reshape, strict=strict)
             for key in first_elem
         }
 
     elif isinstance(first_elem, Sized):
         return [
-            concat_tensors([item[i] for item in input], dim, strict)
+            concat_tensors([item[i] for item in input], dim=dim, auto_reshape=auto_reshape, strict=strict)
             for i in range(len(first_elem))
         ]
 
