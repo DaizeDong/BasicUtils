@@ -164,7 +164,7 @@ def concat_tensors(input: Union[List, Tuple], dim=0, auto_reshape=False, strict=
         }
     """
     if len(input) == 0:
-        return input
+        return None
 
     first_elem = input[0]
 
