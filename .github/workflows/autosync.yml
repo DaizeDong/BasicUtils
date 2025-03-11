@@ -4,26 +4,45 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   fetch-webhooks-and-trigger:
     runs-on: ubuntu-latest
     steps:
-      - name: Get All Webhook URL
-        id: get_webhooks
+      - name: Get Webhooks (Debug API Response)
         run: |
-          URLS=$(curl -s -X GET -H "Authorization: Bearer ${{ secrets.REPO_ACCESS_TOKEN }}" \
-                     -H "Accept: application/vnd.github.v3+json" \
-                     https://api.github.com/repos/DaizeDong/BasicUtils/hooks \
-                 | jq -r '.[] | select(.active == true) | .config.url')
+          echo "Starting workflow for syncing submodule updates..."
+          echo "Running on branch: ${{ github.ref }}"
+          echo "Fetching webhooks from GitHub API..."
+          curl -s -X GET -H "Authorization: Bearer ${{ secrets.REPO_ACCESS_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               https://api.github.com/repos/DaizeDong/BasicUtils/hooks > webhooks.json
+          echo "GitHub API Response:"
+          cat webhooks.json
+
+      - name: Extract Webhook URLs
+        run: |
+          echo "Extracting webhook URLs from JSON..."
+          URLS=$(jq -r '.[] | select(.active == true) | .config.url' webhooks.json | tr '\n' ' ')
+          
+          if [[ -z "$URLS" ]]; then
+            echo "❌ No active webhooks found!"
+            exit 1
+          fi
+          
+          echo "Extracted Webhook URLs:"
+          echo "$URLS"
           echo "WEBHOOK_URLS=${URLS}" >> $GITHUB_ENV
 
       - name: Send Sync Signal to Main Repos
         run: |
+          echo "Sending webhook notifications..."
           for url in $WEBHOOK_URLS; do
-            echo "Triggering: $url"
+            echo "Triggering webhook: $url"
             curl -X POST -H "Accept: application/vnd.github.everest-preview+json" \
                  -H "Authorization: Bearer ${{ secrets.REPO_ACCESS_TOKEN }}" \
                  "$url" \
-                 -d '{"event_type": "update_submodule"}'
+                 -d '{"event_type": "update_submodule"}' || echo "❌ Failed to trigger $url"
           done
+          echo "✅ Workflow execution completed successfully!"
