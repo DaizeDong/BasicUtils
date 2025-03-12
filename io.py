@@ -10,28 +10,35 @@ import shutil
 from typing import Dict, List, Union
 
 
-def create_dir(dir, suppress_errors=False):
+def create_dir(dir, suppress_errors=False) -> bool:
     try:
         if not os.path.exists(dir):
             os.makedirs(dir)
+            return True
+        else:
+            return False
     except Exception as e:
         if suppress_errors:
             print(f"{e}\n(This exception have been suppressed and would not influence the program execution)")
+            return False
         else:
             raise e
 
 
-def delete_file_or_dir(dir, suppress_errors=False):
+def delete_file_or_dir(dir, suppress_errors=False) -> bool:
     try:
         if os.path.isfile(dir):
             os.remove(dir)
+            return True
         elif os.path.exists(dir):
             shutil.rmtree(dir)
+            return True
         else:
-            pass
+            return False
     except Exception as e:
         if suppress_errors:
             print(f"{e}\n(This exception have been suppressed and would not influence the program execution)")
+            return False
         else:
             raise e
 
