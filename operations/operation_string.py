@@ -1,19 +1,18 @@
 import re
 import types
 from argparse import ArgumentTypeError
-from typing import List
 
 
-def str2none(v, extended=True):
+def str2none(v: str, extended=True):
     if isinstance(v, types.NoneType):
         return v
     if v.lower() in ("none",) + (("null",) if extended else ()):
         return None
     else:
-        raise ArgumentTypeError("NoneType value expected.")
+        raise ValueError(f"Unable to convert \"{v}\" to None.")
 
 
-def str2bool(v, extended=True):
+def str2bool(v: str, extended=True):
     if isinstance(v, bool):
         return v
     if v.lower() in ("true",) + (("yes", "t", "y", "1") if extended else ()):
@@ -21,15 +20,58 @@ def str2bool(v, extended=True):
     elif v.lower() in ("false",) + (("no", "f", "n", "0") if extended else ()):
         return False
     else:
-        raise ArgumentTypeError("Boolean value expected.")
+        raise ValueError(f"Unable to convert \"{v}\" to bool.")
 
 
-def string2number_list(string, sep=","):
-    if isinstance(string, List) or string is None:
-        return string
-    else:
-        split_string = string.split(sep)
-        return [float(num) if "." in num else int(num) for num in split_string]
+def _auto_convert_type(v, extended=False):
+    try:
+        return int(v)
+    except ValueError:
+        pass
+    try:
+        return float(v)
+    except ValueError:
+        pass
+    try:
+        return str2bool(v, extended)
+    except ValueError:
+        pass
+    try:
+        return str2none(v, extended)
+    except ValueError:
+        pass
+    return v
+
+
+def str2dict(v: str, sep=",", extended=False):
+    """
+    Convert a string to a dictionary.
+    The key will be in str type, and the value will be in int/float/bool/None/str type decided by its format.
+    Example:
+         input: "k1=233,k2=true,k3=hello"
+         output: {"k1": 233, "k2": True, "k3": "hello"}
+    """
+    result = {}
+    for item in v.split(sep):
+        if "=" not in item:
+            raise ArgumentTypeError(f"Invalid format for dictionary item: \"{item}\"")
+        key, val = item.split("=", 1)
+        result[key.strip()] = _auto_convert_type(val.strip(), extended=extended)
+    return result
+
+
+def str2list(v, sep=",", extended=False):
+    """
+    Convert a string to a list.
+    The value will be in int/float/bool/None/str type decided by its format.
+    Example:
+         input: "233,true,hello"
+         output: [233, True, "hello"]
+    """
+    result = []
+    for item in v.split(sep):
+        result.append(_auto_convert_type(item.strip(), extended=extended))
+    return result
 
 
 def extract_numbers(string, match_float=True, match_sign=True):
