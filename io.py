@@ -71,17 +71,53 @@ def copy_file_or_dir(source_path, target_dir, print_info=False, suppress_errors=
             raise e
 
 
-def move_file_or_dir(source_path, target_dir, print_info=False, suppress_errors=False) -> bool:
+def move_file_or_dir(source_path, target_dir, overwrite_existed=False, print_info=False, suppress_errors=False) -> bool:
     try:
         if os.path.exists(source_path):
+            source_is_file = os.path.isfile(source_path)
+
             create_dir(target_dir, suppress_errors=suppress_errors)
-            is_file = os.path.isfile(source_path)
-            shutil.move(source_path, target_dir)
-            if print_info:
-                print(f"Moved {'file' if is_file else 'dir'}: {source_path} -> {os.path.join(target_dir, os.path.basename(source_path))}")
-            return True
+            target_path = os.path.join(target_dir, os.path.basename(source_path))
+
+            if os.path.exists(target_path):
+                target_is_file = os.path.isfile(target_path)
+                if not overwrite_existed:
+                    if print_info:
+                        print(f"Target path {target_path} already exists and `overwrite_existed=False`. Skipping move.")
+                    return False
+
+                elif source_is_file ^ target_is_file:  # source and target are different types
+                    if print_info:
+                        print(f"Source and target are different types. `source_is_file={source_is_file}` but `target_is_file={target_is_file}`. Skipping move.")
+                    return False
+
+                elif target_is_file:  # both source and target are files, delete then remove
+                    delete_file_or_dir(target_path, print_info=print_info, suppress_errors=suppress_errors)
+                    shutil.move(source_path, target_dir)
+                    if print_info:
+                        print(f"Overwritten file: {source_path} -> {os.path.join(target_dir, os.path.basename(source_path))}")
+                    return True
+
+                else:  # both source and target are directories, merge the source and target
+                    all_results = []
+                    for subpath in os.listdir(source_path):
+                        source_subpath = os.path.join(source_path, subpath)
+                        result = move_file_or_dir(source_subpath, target_path, overwrite_existed=overwrite_existed, print_info=print_info, suppress_errors=suppress_errors)
+                        all_results.append(result)
+                    success = all(all_results)
+                    if success:
+                        delete_file_or_dir(source_path, print_info=print_info, suppress_errors=suppress_errors)
+                    return all(all_results)
+
+            else:
+                shutil.move(source_path, target_dir)
+                if print_info:
+                    print(f"Moved {'file' if source_is_file else 'dir'}: {source_path} -> {os.path.join(target_dir, os.path.basename(source_path))}")
+                return True
+
         else:
             return False
+
     except Exception as e:
         if suppress_errors:
             print(f"Exception within `{inspect.currentframe().f_code.co_name}`: {e}")
