@@ -11,24 +11,24 @@ import shutil
 from typing import Dict, List, Union
 
 
-def create_dir(dir, print_info=False, suppress_errors=False) -> bool:
+def create_dir(dir, print_info=False, print_func=print, suppress_errors=False) -> bool:
     try:
         if not os.path.exists(dir):
             os.makedirs(dir)
             if print_info:
-                print(f"Created dir: {dir}")
+                print_func(f"Created dir: {dir}")
             return True
         else:
             return False
     except Exception as e:
         if suppress_errors:
-            print(f"Exception within `{inspect.currentframe().f_code.co_name}`: {e}")
+            print_func(f"Exception within `{inspect.currentframe().f_code.co_name}`: {e}")
             return False
         else:
             raise e
 
 
-def delete_file_or_dir(path, print_info=False, suppress_errors=False) -> bool:
+def delete_file_or_dir(path, print_info=False, print_func=print, suppress_errors=False) -> bool:
     try:
         if os.path.exists(path):
             is_file = os.path.isfile(path)
@@ -37,19 +37,19 @@ def delete_file_or_dir(path, print_info=False, suppress_errors=False) -> bool:
             else:
                 shutil.rmtree(path)
             if print_info:
-                print(f"Deleted {'file' if is_file else 'dir'}: {path}")
+                print_func(f"Deleted {'file' if is_file else 'dir'}: {path}")
             return True
         else:
             return False
     except Exception as e:
         if suppress_errors:
-            print(f"Exception within `{inspect.currentframe().f_code.co_name}`: {e}")
+            print_func(f"Exception within `{inspect.currentframe().f_code.co_name}`: {e}")
             return False
         else:
             raise e
 
 
-def copy_file_or_dir(source_path, target_dir, print_info=False, suppress_errors=False) -> bool:
+def copy_file_or_dir(source_path, target_dir, print_info=False, print_func=print, suppress_errors=False) -> bool:
     try:
         if os.path.exists(source_path):
             create_dir(target_dir, suppress_errors=suppress_errors)
@@ -59,19 +59,19 @@ def copy_file_or_dir(source_path, target_dir, print_info=False, suppress_errors=
             else:
                 shutil.copytree(source_path, os.path.join(target_dir, os.path.basename(source_path)), dirs_exist_ok=True)
             if print_info:
-                print(f"Copied {'file' if is_file else 'dir'}: {source_path} -> {os.path.join(target_dir, os.path.basename(source_path))}")
+                print_func(f"Copied {'file' if is_file else 'dir'}: {source_path} -> {os.path.join(target_dir, os.path.basename(source_path))}")
             return True
         else:
             return False
     except Exception as e:
         if suppress_errors:
-            print(f"Exception within `{inspect.currentframe().f_code.co_name}`: {e}")
+            print_func(f"Exception within `{inspect.currentframe().f_code.co_name}`: {e}")
             return False
         else:
             raise e
 
 
-def move_file_or_dir(source_path, target_dir, overwrite_existed=False, print_info=False, suppress_errors=False) -> bool:
+def move_file_or_dir(source_path, target_dir, overwrite_existed=False, print_info=False, print_func=print, suppress_errors=False) -> bool:
     try:
         if os.path.exists(source_path):
             source_is_file = os.path.isfile(source_path)
@@ -83,19 +83,19 @@ def move_file_or_dir(source_path, target_dir, overwrite_existed=False, print_inf
                 target_is_file = os.path.isfile(target_path)
                 if not overwrite_existed:
                     if print_info:
-                        print(f"Target path {target_path} already exists and `overwrite_existed=False`. Skipping move.")
+                        print_func(f"Target path {target_path} already exists and `overwrite_existed=False`. Skipping move.")
                     return False
 
                 elif source_is_file ^ target_is_file:  # source and target are different types
                     if print_info:
-                        print(f"Source and target are different types. `source_is_file={source_is_file}` but `target_is_file={target_is_file}`. Skipping move.")
+                        print_func(f"Source and target are different types. `source_is_file={source_is_file}` but `target_is_file={target_is_file}`. Skipping move.")
                     return False
 
                 elif target_is_file:  # both source and target are files, delete then remove
                     delete_file_or_dir(target_path, print_info=print_info, suppress_errors=suppress_errors)
                     shutil.move(source_path, target_dir)
                     if print_info:
-                        print(f"Overwritten file: {source_path} -> {os.path.join(target_dir, os.path.basename(source_path))}")
+                        print_func(f"Overwritten file: {source_path} -> {os.path.join(target_dir, os.path.basename(source_path))}")
                     return True
 
                 else:  # both source and target are directories, merge the source and target
@@ -112,7 +112,7 @@ def move_file_or_dir(source_path, target_dir, overwrite_existed=False, print_inf
             else:
                 shutil.move(source_path, target_dir)
                 if print_info:
-                    print(f"Moved {'file' if source_is_file else 'dir'}: {source_path} -> {os.path.join(target_dir, os.path.basename(source_path))}")
+                    print_func(f"Moved {'file' if source_is_file else 'dir'}: {source_path} -> {os.path.join(target_dir, os.path.basename(source_path))}")
                 return True
 
         else:
@@ -120,7 +120,7 @@ def move_file_or_dir(source_path, target_dir, overwrite_existed=False, print_inf
 
     except Exception as e:
         if suppress_errors:
-            print(f"Exception within `{inspect.currentframe().f_code.co_name}`: {e}")
+            print_func(f"Exception within `{inspect.currentframe().f_code.co_name}`: {e}")
             return False
         else:
             raise e
@@ -225,17 +225,17 @@ def save_jsonl(data, file_path, **kwargs):
             f.write(f"{json.dumps(ins, ensure_ascii=False, **kwargs)}\n")
 
 
-def _compress_image(image_path, print_info=False):
+def _compress_image(image_path, print_info=False, print_func=print):
     import cv2
     img = cv2.imread(image_path, cv2.IMREAD_COLOR)
     cv2.imwrite(image_path, img, [cv2.IMWRITE_PNG_COMPRESSION, 9])
     if print_info:
-        print(f'Compression done for "{image_path}".')
+        print_func(f'Compression done for "{image_path}".')
 
 
-def compress_png_image(image_path, non_block=True, print_info=False):
+def compress_png_image(image_path, non_block=True, print_info=False, print_func=print):
     if non_block:  # Start a new process to run the compression
-        process = multiprocessing.Process(target=_compress_image, args=(image_path, print_info))
+        process = multiprocessing.Process(target=_compress_image, args=(image_path, print_info, print_func))
         process.start()
     else:
-        _compress_image(image_path, print_info)
+        _compress_image(image_path, print_info, print_func)
