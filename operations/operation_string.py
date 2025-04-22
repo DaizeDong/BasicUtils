@@ -1,6 +1,10 @@
+import base64
 import re
 import types
+import zlib
 from argparse import ArgumentTypeError
+
+import numpy as np
 
 
 def str2none(v: str, extended=True):
@@ -72,6 +76,28 @@ def str2list(v, sep=",", extended=False):
     for item in v.split(sep):
         result.append(_auto_convert_type(item.strip(), extended=extended))
     return result
+
+
+def str2ndarray(array_str: str, dtype=np.float32) -> np.ndarray:
+    """
+    Decompress the base64-encoded string back into a numpy array.
+    """
+    if not array_str.strip():
+        return np.array([])
+    compressed = base64.b64decode(array_str.encode("utf-8"))
+    decompressed = zlib.decompress(compressed)
+    return np.frombuffer(decompressed, dtype=dtype)
+
+
+def ndarray2str(array: np.ndarray, dtype=np.float32, compresslevel: int = 9) -> str:
+    """
+    Compress a numpy array to a base64-encoded zlib-compressed string.
+    """
+    if array is None or array.size == 0:
+        return ""
+    array_bytes = array.astype(dtype).tobytes()
+    compressed = zlib.compress(array_bytes, level=compresslevel)
+    return base64.b64encode(compressed).decode("utf-8")
 
 
 def extract_numbers(string, match_float=True, match_sign=True):

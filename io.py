@@ -144,25 +144,25 @@ def find_files(dir, name_pattern):
     return matches
 
 
-def save_compressed_file_7z(data, file_path):  # 7z
+def save_compressed_file_7z(data, file_path):
     create_dir(os.path.dirname(file_path), suppress_errors=True)
     with lzma.open(file_path, "wb") as file:
         pickle.dump(data, file)
 
 
-def load_compressed_file_7z(file_path):  # 7z
+def load_compressed_file_7z(file_path):
     with lzma.open(file_path, "rb") as file:
         data = pickle.load(file)
     return data
 
 
-def save_compressed_file_gz(data, file_path, compresslevel=6):  # gz
+def save_compressed_file_gz(data, file_path, compresslevel: int = 9):
     create_dir(os.path.dirname(file_path), suppress_errors=True)
     with gzip.open(file_path, "wb", compresslevel=compresslevel) as file:
         pickle.dump(data, file)
 
 
-def load_compressed_file_gz(file_path):  # gz
+def load_compressed_file_gz(file_path):
     with gzip.open(file_path, "rb") as file:
         data = pickle.load(file)
     return data
