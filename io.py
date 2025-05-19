@@ -28,6 +28,10 @@ def create_dir(dir, print_info=False, print_func=print, suppress_errors=False) -
             raise e
 
 
+def create_dir_for_file(file, print_info=False, print_func=print, suppress_errors=False) -> bool:
+    return create_dir(os.path.dirname(file), print_info, print_func, suppress_errors)
+
+
 def delete_file_or_dir(path, print_info=False, print_func=print, suppress_errors=False) -> bool:
     try:
         if os.path.exists(path):
