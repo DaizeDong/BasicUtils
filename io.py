@@ -148,6 +148,24 @@ def find_files(dir, name_pattern):
     return matches
 
 
+def find_dirs(dir, name_pattern):
+    """
+    Search for directories matching a specified pattern in a given directory and its subdirectories.
+
+    Args:
+    - dir: String of root directory path to search.
+    - name_pattern: String of pattern to match directory name against (e.g. 'train_*' to match all train directories).
+
+    Returns:
+    - A list of full paths to the found directories.
+    """
+    matches = []
+    for root, dirs, files in os.walk(dir):
+        for dirname in fnmatch.filter(dirs, name_pattern):
+            matches.append(os.path.join(root, dirname))
+    return matches
+
+
 def save_compressed_file_7z(data, file_path):
     create_dir(os.path.dirname(file_path), suppress_errors=True)
     with lzma.open(file_path, "wb") as file:

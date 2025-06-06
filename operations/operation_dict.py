@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple, Union
 
 
 def dict_to_args_str(args_dict: Dict[str, Any]) -> str:
@@ -39,3 +39,11 @@ def reverse_dict(input_dict, aggregate_same_results=True):
             else:
                 raise ValueError("Input dictionary does not satisfy the one-to-one mapping condition.")
     return output_dict
+
+
+def safe_pop(input_dict: Dict[str, Any], key: Union[str, List[str], Tuple[str]]) -> Any:
+    """Safely pop keys from a dictionary, returning None if the key does not exist."""
+    if isinstance(key, (list, tuple)):
+        return [safe_pop(input_dict, k) for k in key]
+    else:
+        return input_dict.pop(key) if key in input_dict else None
